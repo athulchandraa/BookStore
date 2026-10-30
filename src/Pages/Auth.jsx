@@ -1,12 +1,20 @@
 import { useFormik } from 'formik'
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
 import { FaEye, FaEyeSlash, FaUserAlt } from 'react-icons/fa'
 import { Link, useNavigate } from 'react-router-dom'
 import * as Yup from 'yup'
-import { loginAPI, registerAPI } from '../allApiService'
+import { GoogleloginAPI, loginAPI, registerAPI } from '../allApiService'
 import { Bounce, ToastContainer, toast } from 'react-toastify';
+import { GoogleLogin } from '@react-oauth/google';
+import { jwtDecode } from "jwt-decode";
+import { routeContext } from '../contextAPI/RouteGuard'
+
+
 
 function Auth({insideRegistor}) {
+
+  const{role,setRole,authorisedUser,setAuthorisedUser}=useContext(routeContext)
+
   const navigate=useNavigate()
 
   const[togglePassword,setTogglePassword]=useState(false)
@@ -46,8 +54,10 @@ function Auth({insideRegistor}) {
       
       setTimeout(()=>{
         if(result.data.user.role=="admin"){
+          setRole("admin")
           navigate('/admin')
         }else{
+          setRole("user")
           navigate('/')
         }
       },2500)
@@ -67,6 +77,29 @@ function Auth({insideRegistor}) {
     }
     navigate('/login')
     
+  }
+
+  const handleGoogleLogin=async(credentialResponse)=>{
+    console.log("Inside GoogleLogin");
+    const {email,name,picture}=jwtDecode(credentialResponse.credential)
+    const result=await GoogleloginAPI({username:name,email,password:"googleLogin",picture})
+    if(result.status==200){
+      toast.success("Succesfully Logged In...!")
+      sessionStorage.setItem("token",result.data.token)
+      sessionStorage.setItem("user",JSON.stringify(result.data.user))
+      console.log(result.data.user.role);
+      setTimeout(()=>{
+        if(result.data.user.role=="admin"){
+          setRole("admin")
+          navigate('/admin')
+        }else{
+          setRole("user")
+          navigate('/')
+        }
+      },2500)
+    }else{
+      toast.error(result)
+    }
   }
 
 
@@ -130,7 +163,14 @@ function Auth({insideRegistor}) {
                 <div className='my-5 text-center'>
                   <p>-----------------OR-----------------</p>
                   <div className='mt-2 flex justify-center items-center w-full'>
-                    Google Authentication
+                      <GoogleLogin
+                        onSuccess={credentialResponse => {
+                          handleGoogleLogin(credentialResponse)
+                        }}
+                        onError={() => {
+                          console.log('Login Failed');
+                        }}
+                      />
                   </div>
               </div>}
               {/* Existing User */}

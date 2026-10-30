@@ -1,10 +1,50 @@
-import React from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import Header from '../Components/Header'
 import Footer from '../../Components/Footer'
 import { FaSearch } from 'react-icons/fa'
+import { getHomeBooksAPI } from '../../allApiService'
+import { Link, useNavigate } from 'react-router-dom'
+import { searchContext } from '../../contextAPI/ShareContext'
+import { Bounce, ToastContainer, toast } from 'react-toastify';
 
 
 function Home() {
+
+  const navigate=useNavigate()
+  const{searchKey,setSearchKey}=useContext(searchContext)
+  const[homeBooks,setHomeBooks]=useState([])
+  console.log(homeBooks);
+
+  console.log(searchKey);
+  
+  
+
+  useEffect(()=>{
+    getHomeBooks()
+  },[])
+
+  const getHomeBooks=async()=>{
+    const result=await getHomeBooksAPI()
+    if(result.status==200){
+      setHomeBooks(result.data)
+    }
+  }
+
+  const handleSearch=()=>{
+    if(!searchKey){
+      toast.warning("Plase enter Book Title...")
+    }else if(!sessionStorage.getItem("token")){
+      toast.warning("Please Login To Explore More...")
+      setTimeout(()=>{
+        navigate('/login')
+      },2000)
+    }else if(sessionStorage.getItem('token') && searchKey){
+      navigate('/books')
+    }else{
+      toast.error("Something went Wrong...")
+    }
+  }
+
   return (
     <div>
       <Header/>
@@ -14,8 +54,8 @@ function Home() {
           <h1 className='text-6xl font-medium'>Wonderful Books</h1>
           <p className='text-lg'>Gift your family and friends a book</p>
           <div className='flex items-center mt-5'>
-            <input className='bg-white px-3 py-2 w-100 rounded-3xl text-black outline-blue-500' type="text" placeholder='Search a Book' />
-            <FaSearch className='text-2xl text-gray-500 -ml-10 cursor-pointer'/>
+            <input onChange={(e)=>setSearchKey(e.target.value)} className='bg-white px-3 py-2 w-100 rounded-3xl text-black outline-blue-500' type="text" placeholder='Search a Book' />
+            <FaSearch onClick={handleSearch} className='text-2xl text-gray-500 -ml-10 cursor-pointer'/>
           </div>
         </div>
 
@@ -26,18 +66,25 @@ function Home() {
         <p className='text-3xl my-2'>Explore Our Latest Collections</p>
         <div className='md:grid grid-cols-4 md:my-0'>
           {/* Duplicating Cards */}
-          <div className='shadow rounded p-3 m-4 md:my-0'>
-            <img width={'100%'} height={'300px'} src="https://d1csarkz8obe9u.cloudfront.net/posterpreviews/contemporary-fiction-night-time-book-cover-design-template-1be47835c3058eb42211574e0c4ed8bf_screen.jpg?ts=1734004864" alt="" />
-            <div className='flex flex-col justify-center items-center'>
-              <p className='text-blue-600 font-medium text-xl'>Author</p>
-              <p className='text-xl'>Title</p>
-              <p className='text-xl text-red-600 font-medium'>Price</p>
-            </div>
-          </div>
+          {
+            homeBooks.length>0 ?
+              homeBooks?.map(book=>(
+                <div className='shadow rounded p-3 m-4 md:my-0'>
+                  <img width={'100%'} height={'300px'} src={book?.imageURL} alt="" />
+                  <div className='flex flex-col justify-center items-center'>
+                    <p className='text-blue-600 font-medium text-xl'>{book?.author}</p>
+                    <p className='text-xl'>{book?.title}</p>
+                    <p className='text-xl text-red-600 font-medium'>$ {book?.price}</p>
+                  </div>
+                </div>
+              ))
+            :
+            <p>Loading....</p>
+          }
           
         </div>
         {/* Explore More */}
-        <button className='bg-black text-white px-3 py-2 rounded cursor-pointer'>Explore More...</button>
+        <Link to={'/books'} className='bg-black text-white px-3 py-2 rounded cursor-pointer my-2'>Explore More...</Link>
       </section>
       {/* Featured Authors */}
       <section className='md:grid grid-cols-2 justify-center item-center '>
@@ -71,6 +118,14 @@ function Home() {
           Animi iure quia consequuntur aperiam molestiae odit repudiandae voluptas, illo unde dignissimos voluptatum facere vitae, ex, repellendus eum. Perferendis error reiciendis sint, omnis ut incidunt sunt natus. Quo, libero unde!</p>
         </div>
       </section>
+
+      {/* Toast Container */}
+      <ToastContainer
+      position="top-center"
+      autoClose={3000}
+      theme="colored"
+      transition={Bounce}
+      />
 
       
     </div>

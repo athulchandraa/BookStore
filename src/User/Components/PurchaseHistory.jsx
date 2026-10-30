@@ -1,19 +1,35 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { FaPlus } from 'react-icons/fa'
+import { getUserPurchasedBooks } from '../../allApiService';
 
 
 
 function PurchaseHistory() {
+    const[purchaseBooks,setPurchaseBooks]=([])
+    console.log(purchaseBooks);
+
+    useEffect(()=>{
+        getPurchasedBooks()
+    },[])
+
+    const getPurchasedBooks=async()=>{
+        const result=await getUserPurchasedBooks()
+        setPurchaseBooks(result.data)
+    }
+    
   return (
         <div className='p-10 my-15 shadow rounded'>
         {/* Duplicate */}
-        <div className='p-5 rounded mt-4 shadow'>
+        {
+            purchaseBooks?.length >0 ?
+            purchaseBooks.map(item=>(
+                <div className='p-5 rounded mt-4 shadow'>
             <div className='md:grid grid-cols-[3fr_1fr]'>
                 <div className='px-4'>
-                    <p className='text-2xl'>Title</p>
-                    <p className='text-xl'>Author</p>
-                    <p className='text-lg text-blue-700'>$ Discount Price</p>
-                    <p className='text-justify'>Abstract</p>
+                    <p className='text-2xl'>{item.title}</p>
+                    <p className='text-xl'>{item.author}</p>
+                    <p className='text-lg text-blue-700'>$ {item.discounrPrice}</p>
+                    <p className='text-justify'>{item.abstract}</p>
                     {/* Status Image */}
                     <div className='flex my-3'> 
                         {/* Pending */}
@@ -32,6 +48,13 @@ function PurchaseHistory() {
             </div>
 
         </div>
+            ))
+            
+        :
+        <div>
+            No Books Found...
+        </div>
+        }
 
     </div>
   )

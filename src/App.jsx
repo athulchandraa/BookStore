@@ -15,10 +15,15 @@ import Pnf from './Pages/Pnf'
 
 import PreLoader from './Components/PreLoader'
 import Footer from './Components/Footer'
-import { useState } from 'react'
+import { useContext, useState } from 'react'
+import PaymentSuccess from './User/Pages/PaymentSuccess'
+import PaymentFailed from './User/Pages/PaymentFailed'
+import RouteGuard, { routeContext } from './contextAPI/RouteGuard'
 
 
 function App() {
+
+  const{role,setRole,authorisedUser,setAuthorisedUser}=useContext(routeContext)
 
   const [isLoading,setIsLoading]=useState(true)
 
@@ -32,18 +37,31 @@ function App() {
     <Routes>
       <Route path='/' element={isLoading ? <PreLoader/> :<Home/>}/>
       <Route path='/contact' element={<Contact/>}/>
-      <Route path='/books' element={<Books/>}/>
       <Route path='/login' element={<Auth/>}/>
       <Route path='/register' element={<Auth insideRegistor/>}/>
 
-      <Route path='/profile/:id' element={<Profile/>}/>
-      <Route path='/books/:id' element={<View/>}/>
+      {
+        role=="user" && 
+        <>
+          <Route path='/books' element={<Books/>}/>
+          <Route path='/profile/:id' element={<Profile/>}/>
+          <Route path='/books/:id' element={<View/>}/>
+          <Route path='/success' element={<PaymentSuccess/>}/>
+          <Route path='/failed' element={<PaymentFailed/>}/>
+        </>
+      }
 
-      <Route path='/admin' element={<AdminDashboard/>}/>
-      <Route path='/admin/resources' element={<AdminResource/>}/>
-      <Route path='/admin/settings' element={<AdminSettings/>}/>
+      {
+        role=="admin" && 
+        <>
+          <Route path='/admin' element={<AdminDashboard/>}/>
+          <Route path='/admin/resources' element={<AdminResource/>}/>
+          <Route path='/admin/settings' element={<AdminSettings/>}/>
+        </>
+      }
 
       <Route path='/*' element={<Pnf/>}/>
+
     </Routes>
     <Footer/>
     </>
